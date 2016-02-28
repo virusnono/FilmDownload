@@ -43,8 +43,8 @@ namespace FilmDownload
                 //DataTable dtList = xml.GetData(rootNodeName);'
 
                 FileStream fs = new FileStream(path, FileMode.Open);
-
                 films = XmlHelper.Deserialize(typeof(List<FilmUpdate>), fs) as List<FilmUpdate>;
+                fs.Close();
             }
             catch (Exception ex)
             {
@@ -135,6 +135,8 @@ namespace FilmDownload
                     }
                     Thread thread = new Thread(new ParameterizedThreadStart(CheckFilmState));
                     thread.Start(film);
+
+                    
                 }
             }
             catch (Exception ex)
@@ -246,7 +248,7 @@ namespace FilmDownload
         {
             try
             {
-                FilmUpdate curFilm = film as FilmUpdate;
+                FilmUpdate curFilm = (FilmUpdate)film;
 
                 sem.WaitOne();
                 var request = (HttpWebRequest)WebRequest.Create(curFilm.Url);
@@ -287,13 +289,18 @@ namespace FilmDownload
 
                 foreach (FieldInfo fi in film.GetType().GetFields())
                 {
-                    if (fi.Name == "Name")
+                    if (fi.Name ==  "Name")
                     {
                         lvi.Text = fi.GetValue(film).ToString();
                     }
                     else
                     {
                         lvi.SubItems.Add(fi.GetValue(film).ToString());
+
+                        if (fi.Name == "CountWaitDownload" && ((int)fi.GetValue(film)) > 0)
+                        {
+                            lvi.BackColor = Color.LightPink;
+                        }
                     }
                 }
                 listView1.Items.Add(lvi);
@@ -330,6 +337,11 @@ namespace FilmDownload
                         else
                         {
                             lvi.SubItems.Add(fi.GetValue(film).ToString());
+
+                            if (fi.Name == "CountWaitDownload" && ((int)fi.GetValue(film)) > 0)
+                            {
+                                lvi.BackColor = Color.LightPink;
+                            }
                         }
                     }
                     listView1.Items.Add(lvi);
